@@ -16,62 +16,88 @@ class AuthService {
         this.authRepository = new AuthRepository();
     }
 
-    async handleGoogleSignIn(tokenId: string) {
+    async handleGoogleSignIn(tokenId: string,role:Role) : Promise<{user: User & { roles: { role: Role }[] }, token: string}> {
         try {
+            // console.log("tokenId ->",tokenId);
             const ticket = await client.verifyIdToken({
                 idToken: tokenId,
                 audience: GOOGLE_CLIENT_ID,
             });
-
+            // console.log("ticket ->",ticket);
             const payload = ticket.getPayload();
             if(!payload || !payload.email) {
                 throw new AppError("Invalid Google token", STATUS_CODE.UNAUTHORIZED);
             }
             const email = payload.email;
-            let user:User;
+            let user:(User & { roles: { role: Role }[] }) | null;
             try {
-                user = await this.authRepository.getUserByEmail(email);
+                user = await this.authRepository.getUserWithRoleByEmail(email) as (User & { roles: { role: Role }[] }) | null;
+                if(user){
+                    const hasRole=user?.roles.some(p=>p.role==role);
+                    const userId=user?.id?user.id:"";
+                    if(!hasRole){
+                        user= await this.authRepository.addRoleToUser(userId,role) as (User & { roles: { role: Role }[] }) | null;
+                    }
+                }else{
+                    user = await this.registerUser(email, "", role) as (User & { roles: { role: Role }[] }) | null;
+                }
             } catch (error) {
                 if(error instanceof AppError && error.httpCode === STATUS_CODE.NOT_FOUND){
-                    user = await this.registerUser(email, "", Role.CUSTOMER) as User;
+                    user = await this.registerUser(email, "", Role.CUSTOMER) as (User & { roles: { role: Role }[] }) | null;
                 }else{
-                    throw new AppError("Error during Google sign-in", STATUS_CODE.INTERNAL_SERVER_ERROR);
+                    throw new AppError(`Error during Google sign-in ${error}`, STATUS_CODE.INTERNAL_SERVER_ERROR);
                 }
             }
-            let token = generateToken(user.id, user.role);
+            if(!user){
+                throw new AppError("Could not sign in user with Google", STATUS_CODE.NOT_FOUND);
+            }
+            let token = generateToken(user.id,role);
             return {user, token};
         } catch (error) {
             if(error instanceof AppError){
                 throw error;
             }else{
-                throw new AppError("Error during Google sign-in", STATUS_CODE.INTERNAL_SERVER_ERROR);
+                throw new AppError(`Error during Google sign-in  ${error}`, STATUS_CODE.INTERNAL_SERVER_ERROR);
             }
         }
     }
 
-    async registerUser(email: string, password: string, role:Role) {
+    async registerUser(email: string, password: string, role:Role):Promise<User|null> {
         try {
-            const existingUser = await this.authRepository.getUserByEmailForRegister(email);
+            const existingUser:(User & { roles: { role: Role }[] }) | null  = await this.authRepository.getUserWithRoleByEmail(email);
             if(existingUser){
-                throw new AppError("User already exists", STATUS_CODE.BAD_REQUEST);
+                if(existingUser.roles?.some(r => r.role === role)){
+                    throw new AppError("User already exists with this role", STATUS_CODE.BAD_REQUEST);
+                }
+                const updatedUser = await this.authRepository.addRoleToUser(existingUser.id, role);
+                return updatedUser;
             }
-            const hashedPassword = await hashPassword(password);
-            const user = await this.authRepository.registerUser(email, hashedPassword, role);
-            return user;
+            else{
+                const hashedPassword :string= await hashPassword(password);
+                const user : User | null = await this.authRepository.registerUser(email, hashedPassword, role);
+                return user;
+            }
         } catch (error) {
             throw error;
         }
     }
 
-    async loginUser(email: string, password: string) {
+    async loginUser(email: string, password: string,role:Role) : Promise<{user: User & { roles: { role: Role }[] }, token: string}> {
         try {
-            const user : User= await this.authRepository.loginUser(email);
-            const passwordToCompare:string=user.password?user.password:"";
-            const isValidPassword=await comparePassword(password,passwordToCompare);
-            if(!isValidPassword){
-                throw new AppError("Invalid credentials", STATUS_CODE.UNAUTHORIZED);
+            const user : User & {roles:{role:Role}[]}|null= await this.authRepository.getUserWithRoleByEmail(email);
+            if(!user){
+                throw new AppError("Invalid credentials", STATUS_CODE.NOT_FOUND);
             }
-            const token=generateToken(user.id,user.role);
+            const passwordToCompare:string|null=user.password?user.password:""; 
+            const isValidPassword:Boolean=await comparePassword(password,passwordToCompare);
+            const currentRole : Role= role;
+            if(!isValidPassword){
+                throw new AppError("Invalid credentials . Password is incorrect", STATUS_CODE.UNAUTHORIZED);
+            }
+            if(!user.roles?.some(r => r.role === currentRole)){
+                throw new AppError(`User does not have the required role ${role}`, STATUS_CODE.FORBIDDEN);
+            }
+            const token:string=generateToken(user.id,currentRole);
             return {user,token};
         } catch (error) {
             throw error;

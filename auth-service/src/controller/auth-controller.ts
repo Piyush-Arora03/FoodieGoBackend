@@ -34,7 +34,9 @@ class AuthController {
     loginUser = async (req:Request, res:Response) => {
         try {
             const {email, password}:{ email:string, password:string } = req.body;
-            const {user, token} = await this.authService.loginUser(email, password);
+            const packageName : string = req.headers['x-package-name'] as string
+            const role:Role = roleMapper(packageName);
+            const {user, token} = await this.authService.loginUser(email, password,role);
             res.status(STATUS_CODE.OK).json({
                 message: "User logged in successfully",
                 data: {user, token},
@@ -54,7 +56,10 @@ class AuthController {
             if(provider !== 'google'){
                 throw new AppError("Unsupported OAuth provider", STATUS_CODE.BAD_REQUEST);
             }
-            const result = await this.authService.handleGoogleSignIn(token);
+            const packageName : string = req.headers['x-package-name'] as string
+            const role:Role = roleMapper(packageName);
+            // console.log("Package Name:", packageName, "Mapped Role:", role);
+            const result = await this.authService.handleGoogleSignIn(token,role);
             res.status(STATUS_CODE.OK).json({
                 message: "User signed in with Google successfully",
                 data: result,
