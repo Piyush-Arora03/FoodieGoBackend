@@ -1,11 +1,7 @@
-import { Address } from "@prisma/client";
+import { Address } from "../../node_modules/.prisma/user-profile-client";
+import { UserAddressPayload } from "../utils/payload";
 declare class AddressRepository {
-    create(userId: string, data: {
-        street: string;
-        city: string;
-        state: string;
-        postalCode: string;
-    }): Promise<Address>;
+    create(userId: string, data: UserAddressPayload): Promise<Address>;
     getById(userId: string): Promise<Address[]>;
     deleteAddress(id: string): Promise<Address>;
     updateAddress(id: string, data: {

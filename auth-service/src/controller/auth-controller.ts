@@ -2,7 +2,7 @@ import  AuthService  from "../service/auth-service";
 import { Request, Response } from "express";
 import { STATUS_CODE } from "../config/status-code.config";
 import { AppError } from "../utils/app-error";
-import { Role } from "@prisma/client";
+import { Role } from "../../node_modules/.prisma/auth-client";
 import { roleMapper } from "../utils/role-mapper";
 
 

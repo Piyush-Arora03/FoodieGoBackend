@@ -1,8 +1,8 @@
-import { Profile } from "@prisma/client";
+import { Profile } from "../../node_modules/.prisma/user-profile-client";
 declare class UserProfileRepository {
     createOrUpdate(userId: string, data: {
-        firstName: string;
-        lastName: string;
+        firstName?: string;
+        lastName?: string;
         phone?: string;
     }): Promise<Profile>;
     getById(userId: string): Promise<Profile | null>;

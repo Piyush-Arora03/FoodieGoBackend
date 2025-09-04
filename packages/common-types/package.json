@@ -1,0 +1,16 @@
+{
+  "name": "@foodiego/common-types",
+  "version": "1.0.0",
+  "description": "Shared types and enums for the FoodieGo microservices.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

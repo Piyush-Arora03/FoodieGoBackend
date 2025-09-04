@@ -1,6 +1,6 @@
 import { STATUS_CODE } from "../config/status-code.config";
 import { AppError } from "../utils/app-error";
-import { Role } from "@prisma/client";
+import { Role } from "../../node_modules/.prisma/auth-client";
 
 export const roleMapper= (packageName:string)=>{
     if(packageName.endsWith(".customer")){

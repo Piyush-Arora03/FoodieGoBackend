@@ -7,12 +7,20 @@ exports.verifyToken = exports.generateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_config_1 = require("../config/dotenv.config");
 const generateToken = (userID, role) => {
-    const token = jsonwebtoken_1.default.sign({ id: userID, role }, dotenv_config_1.JWT_SECRET, { expiresIn: '1h' });
+    const token = jsonwebtoken_1.default.sign({ id: userID, role }, dotenv_config_1.JWT_SECRET, { expiresIn: '1d' });
     return token;
 };
 exports.generateToken = generateToken;
 const verifyToken = (token) => {
-    return jsonwebtoken_1.default.verify(token, dotenv_config_1.JWT_SECRET);
+    try {
+        console.log('token in verify token', token);
+        const res = jsonwebtoken_1.default.verify(token, dotenv_config_1.JWT_SECRET);
+        console.log('res in verify token', res);
+        return res;
+    }
+    catch (error) {
+        throw error;
+    }
 };
 exports.verifyToken = verifyToken;
 //# sourceMappingURL=jwt.js.map

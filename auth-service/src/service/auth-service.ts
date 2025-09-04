@@ -1,11 +1,12 @@
 import  AuthRepository  from "../repository/auth-repository";
-import { Role, User } from "@prisma/client";
+import { Role , User } from "../../node_modules/.prisma/auth-client";
 import { comparePassword, hashPassword } from "../utils/password";
 import { AppError } from "../utils/app-error";
 import {STATUS_CODE} from "../config/status-code.config";
 import { generateToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import { GOOGLE_CLIENT_ID } from "../config/dotenv.config";
+import { JwtPayload,Role as CommonRole} from "@foodiego/common-types";
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -51,7 +52,11 @@ class AuthService {
             if(!user){
                 throw new AppError("Could not sign in user with Google", STATUS_CODE.NOT_FOUND);
             }
-            let token = generateToken(user.id,role);
+            const data:JwtPayload={
+                id:user.id,
+                role:role as CommonRole
+            };
+            let token = generateToken(data);
             return {user, token};
         } catch (error) {
             if(error instanceof AppError){
@@ -88,7 +93,7 @@ class AuthService {
             if(!user){
                 throw new AppError("Invalid credentials", STATUS_CODE.NOT_FOUND);
             }
-            const passwordToCompare:string|null=user.password?user.password:""; 
+            const passwordToCompare:string=user.password?user.password:""; 
             const isValidPassword:Boolean=await comparePassword(password,passwordToCompare);
             const currentRole : Role= role;
             if(!isValidPassword){
@@ -97,7 +102,11 @@ class AuthService {
             if(!user.roles?.some(r => r.role === currentRole)){
                 throw new AppError(`User does not have the required role ${role}`, STATUS_CODE.FORBIDDEN);
             }
-            const token:string=generateToken(user.id,currentRole);
+            let payload:JwtPayload={
+                id:user.id,
+                role:currentRole as CommonRole
+            };
+            const token:string=generateToken(payload);
             return {user,token};
         } catch (error) {
             throw error;

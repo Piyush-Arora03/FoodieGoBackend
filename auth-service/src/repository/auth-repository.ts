@@ -1,8 +1,7 @@
-import { Role,User } from "@prisma/client";
+import { Role,User } from "../../node_modules/.prisma/auth-client";
 import { prisma } from "../db";
 import { AppError } from "../utils/app-error";
 import {STATUS_CODE} from '../config/status-code.config';
-import { create } from "domain";
 
 
 class AuthRepository {
@@ -58,6 +57,25 @@ class AuthRepository {
             return user;
         } catch (error) {
             throw new AppError("Error while adding role to user",STATUS_CODE.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    async getUserByIdWithRoles(id:string): Promise<(User & { roles: { role: Role }[] }) | null> {
+        try {
+            const user= await prisma.user.findUnique({
+                where:{id:id},
+                include:{
+                    roles:{
+                        select:{
+                            role:true
+                        }
+                    }
+                }
+            });
+            return user;
+        } catch (error) {
+            throw new AppError("Error while getting user by id with roles",STATUS_CODE.INTERNAL_SERVER_ERROR);
         }
     }
 }

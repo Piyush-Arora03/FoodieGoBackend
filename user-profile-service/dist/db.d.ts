@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-declare const prisma: PrismaClient<import("@prisma/client").Prisma.PrismaClientOptions, never, import("@prisma/client/runtime/library").DefaultArgs>;
+import { PrismaClient } from "../node_modules/.prisma/user-profile-client";
+declare const prisma: PrismaClient;
 export { prisma };
 //# sourceMappingURL=db.d.ts.map

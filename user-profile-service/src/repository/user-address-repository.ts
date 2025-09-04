@@ -1,18 +1,19 @@
-import { Address } from "@prisma/client";
+import { Address } from "../../node_modules/.prisma/user-profile-client";
 import {prisma} from '../db'
 import { AppError } from "../utils/app-error";
 import { STATUS_CODE } from "../config/status-code.config";
+import { UserAddressPayload } from "../utils/payload";
 
 class AddressRepository{
-    async create(userId:string,data:{street:string,city:string,state:string,postalCode:string}) : Promise<Address>{
+    async create(userId:string,data:UserAddressPayload) : Promise<Address>{
         try {
             const address:Address=await prisma.address.create({
                 data:{
                     userId:userId,
-                    street:data.street,
-                    city:data.city,
-                    state:data.state,
-                    postalCode:data.postalCode
+                    street:data.street!!,
+                    city:data.city!!,
+                    state:data.state!!,
+                    postalCode:data.postalCode!!
                 }
             });
             return address;

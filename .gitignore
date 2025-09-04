@@ -1,5 +1,2 @@
-auth-service/node_modules
 # Keep environment variables out of version control
-auth-service/.env
-
-auth-service/src/generated/prisma
+node_modules

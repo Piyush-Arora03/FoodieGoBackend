@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/user-profile-client"
 }
 
 datasource db {
@@ -15,8 +16,8 @@ datasource db {
 
 model Profile{
   id String @id @default(cuid())
-  firstName String
-  lastName String
+  firstName String?
+  lastName String?
   phone String?
   userId String @unique
   createdAt DateTime @default(now())

@@ -9,14 +9,14 @@ class UserProfileRepository {
             const profile = await db_1.prisma.profile.upsert({
                 where: { userId },
                 update: {
-                    firstName: data.firstName,
-                    lastName: data.lastName,
+                    firstName: data.firstName ?? null,
+                    lastName: data.lastName ?? null,
                     phone: data.phone ?? null
                 },
                 create: {
                     userId: userId,
-                    firstName: data.firstName,
-                    lastName: data.lastName,
+                    firstName: data.firstName ?? null,
+                    lastName: data.lastName ?? null,
                     phone: data.phone ?? null
                 }
             });
