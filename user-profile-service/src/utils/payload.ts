@@ -10,3 +10,10 @@ export interface UserAddressPayload{
     state?:string
     postalCode?:string
 }
+
+export interface GeoAddress {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+}

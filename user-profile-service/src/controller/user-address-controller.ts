@@ -4,6 +4,7 @@ import { STATUS_CODE } from "../config/status-code.config";
 import { AppError } from "../utils/app-error";
 import { UserAddressPayload } from "../utils/payload";
 import { Address } from "../../node_modules/.prisma/user-profile-client"
+import GeoService from '../service/geo-service'
 
 const userAddressService: UserAddressService = new UserAddressService();
 
@@ -105,10 +106,40 @@ const deleteUserAddress = async (req: Request, res: Response) => {
     }
 }
 
+const reverseGeocode = async (req: Request, res: Response) => {
+    try {
+        const { lat, lon } = req.body;
+
+        if (!lat || !lon) {
+            throw new AppError('Latitude and longitude are required', STATUS_CODE.BAD_REQUEST);
+        }
+        const userId = req.user!!.id
+        const structuredAddress: UserAddressPayload = await GeoService.reverseGeocode(Number(lat), Number(lon));
+        const address = await userAddressService.createUserAddress(userId, structuredAddress);
+        res.status(STATUS_CODE.OK).json({
+            data: address,
+            success: true,
+            message: "User Address Created successfully"
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return res.status(error.httpCode).json({
+                success: false,
+                message: error.message
+            });
+        }
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+}
+
 
 export {
     getUserAddress,
     createUserAddress,
     updateUserAddress,
-    deleteUserAddress
+    deleteUserAddress,
+    reverseGeocode
 }
