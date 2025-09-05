@@ -11,6 +11,7 @@ class UserProfileService {
     }
     async getUserProfile(userId) {
         try {
+            console.log("calling get user profile", userId);
             const userProfile = await this.userProfileRepository.getById(userId);
             return userProfile;
         }

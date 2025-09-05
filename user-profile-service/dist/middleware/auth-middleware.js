@@ -18,6 +18,7 @@ const protect = (req, res, next) => {
         const decoded = (0, jwt_1.verifyToken)(token);
         console.log("decoded data is ", decoded);
         req.user = { id: decoded.id, role: decoded.role };
+        console.log(req.user);
         next();
     }
     catch (error) {

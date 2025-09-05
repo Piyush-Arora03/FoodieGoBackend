@@ -6,6 +6,7 @@ const status_code_config_1 = require("../config/status-code.config");
 class UserProfileRepository {
     async createOrUpdate(userId, data) {
         try {
+            console.log("Updating Profile", data);
             const profile = await db_1.prisma.profile.upsert({
                 where: { userId },
                 update: {
@@ -28,9 +29,12 @@ class UserProfileRepository {
     }
     async getById(userId) {
         try {
+            console.log("Fetching Profile", userId);
             const profile = await db_1.prisma.profile.findUnique({
                 where: { userId }
             });
+            ;
+            console.log("Fetched Profile", profile);
             return profile;
         }
         catch (error) {

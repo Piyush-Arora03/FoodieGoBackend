@@ -20,7 +20,20 @@ class UserProfileService {
 
     async createOrUpdateUserProfile(userId: string, updateData: UserProfilePayload): Promise<Profile> {
         try {
-            const updatedProfile = await this.userProfileRepository.createOrUpdate(userId, updateData);
+            const previousProfile: Profile | null = await this.getUserProfile(userId);
+            let previousData: UserProfilePayload = {
+                firstName: "",
+                lastName: "",
+                phone: ""
+            };
+            if (previousProfile) {
+                previousData = {
+                    firstName: previousProfile.firstName ?? "",
+                    lastName: previousProfile.lastName ?? "",
+                    phone: previousProfile.phone ?? ""
+                };
+            }
+            const updatedProfile = await this.userProfileRepository.createOrUpdate(userId, updateData, previousData);
             return updatedProfile;
         } catch (error) {
             throw error;
