@@ -113,11 +113,9 @@ const reverseGeocode = async (req: Request, res: Response) => {
         if (!lat || !lon) {
             throw new AppError('Latitude and longitude are required', STATUS_CODE.BAD_REQUEST);
         }
-        const userId = req.user!!.id
         const structuredAddress: UserAddressPayload = await GeoService.reverseGeocode(Number(lat), Number(lon));
-        const address = await userAddressService.createUserAddress(userId, structuredAddress);
         res.status(STATUS_CODE.OK).json({
-            data: address,
+            data: structuredAddress,
             success: true,
             message: "User Address Created successfully"
         });

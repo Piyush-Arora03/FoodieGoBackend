@@ -13,7 +13,7 @@ app.get('/health', (req:Request, res:Response, next:NextFunction) => {
     res.status(200).json({message: "Auth Service is running"});
 });
 
-app.use('/api/auth', routes);
+app.use('/api', routes);
 
 
 export default app;

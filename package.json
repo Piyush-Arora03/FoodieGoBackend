@@ -1,0 +1,15 @@
+{
+  "name": "foodiego-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FoodieGo microservices workspace",
+  "author": "Your Name",
+  "license": "MIT",
+  "workspaces": [
+    "api-gateway",
+    "auth-service",
+    "user-profile-service",
+    "packages/common-types"
+  ],
+  "packageManager": "pnpm@10.15.0"
+}

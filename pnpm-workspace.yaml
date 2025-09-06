@@ -2,3 +2,4 @@ packages:
   - "auth-service"
   - "user-profile-service"
   - "packages/*"
+  - "api-gateway"
