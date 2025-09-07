@@ -17,7 +17,8 @@ class AuthController {
             const {email, password}:{ email:string, password:string} = req.body;
             const packageName : string = req.headers['x-package-name'] as string
             const role:Role = roleMapper(packageName);
-            const user = await this.authService.registerUser(email, password, role);
+            const profileData:{firstName:string,lastName:string,phone?:string}=req.body
+            const user = await this.authService.registerUser(email, password, role,profileData);
             res.status(STATUS_CODE.CREATED).json({
                 message: "User registered successfully",
                 data: user,

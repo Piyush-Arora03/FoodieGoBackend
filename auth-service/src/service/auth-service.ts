@@ -7,6 +7,8 @@ import { generateToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import { GOOGLE_CLIENT_ID } from "../config/dotenv.config";
 import { JwtPayload, Role as CommonRole } from "@foodiego/common-types";
+import messageQueueService from "./message-queue-service";
+import { BINDING_KEY } from "../config/dotenv.config";
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -30,6 +32,8 @@ class AuthService {
                 throw new AppError("Invalid Google token", STATUS_CODE.UNAUTHORIZED);
             }
             const email = payload.email;
+            const firstName = payload.given_name || "";
+            const lastName = payload.family_name || "";
             let user: (User & { roles: { role: Role }[] }) | null;
             try {
                 user = await this.authRepository.getUserWithRoleByEmail(email) as (User & { roles: { role: Role }[] }) | null;
@@ -40,11 +44,12 @@ class AuthService {
                         user = await this.authRepository.addRoleToUser(userId, role) as (User & { roles: { role: Role }[] }) | null;
                     }
                 } else {
-                    user = await this.registerUser(email, "", role) as (User & { roles: { role: Role }[] }) | null;
+
+                    user = await this.registerUser(email, "", role,{firstName,lastName}) as (User & { roles: { role: Role }[] }) | null;
                 }
             } catch (error) {
                 if (error instanceof AppError && error.httpCode === STATUS_CODE.NOT_FOUND) {
-                    user = await this.registerUser(email, "", Role.CUSTOMER) as (User & { roles: { role: Role }[] }) | null;
+                    user = await this.registerUser(email, "", Role.CUSTOMER,{firstName,lastName}) as (User & { roles: { role: Role }[] }) | null;
                 } else {
                     throw new AppError(`Error during Google sign-in ${error}`, STATUS_CODE.INTERNAL_SERVER_ERROR);
                 }
@@ -67,7 +72,7 @@ class AuthService {
         }
     }
 
-    async registerUser(email: string, password: string, role: Role): Promise<User | null> {
+    async registerUser(email: string, password: string, role: Role,profileData:{firstName:string,lastName:string,phone?:string}): Promise<User | null> {
         try {
             const existingUser: (User & { roles: { role: Role }[] }) | null = await this.authRepository.getUserWithRoleByEmail(email);
             if (existingUser) {
@@ -80,6 +85,16 @@ class AuthService {
             else {
                 const hashedPassword: string = await hashPassword(password);
                 const user: User | null = await this.authRepository.registerUser(email, hashedPassword, role);
+                const eventData={
+                    type:'UserSignedUp',
+                    data:{
+                        userId:user.id,
+                        firstName:profileData.firstName,
+                        lastName:profileData.lastName,
+                        phone:profileData.phone
+                    }
+                }
+                await messageQueueService.publish(BINDING_KEY,eventData);
                 return user;
             }
         } catch (error) {
