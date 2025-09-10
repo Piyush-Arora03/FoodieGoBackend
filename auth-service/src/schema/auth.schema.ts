@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Role } from '@foodiego/common-types'; // still unused but fine
 
 export const registerUserSchema = z.object({
   body: z.object({
