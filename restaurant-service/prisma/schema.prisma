@@ -1,59 +1,50 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/restuarant-client"
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/restuarant-client"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions=[postgis()]
 }
 
 model Restaurant {
-  id              String         @id @default(cuid())
-  name            String
-  description     String
-  street          String
-  city            String
-  state           String
-  postalCode      String
-  latitude        Float
-  longitude       Float
-  cuisine         String
-  operatingHours  Json // Store as JSON for flexibility e.g., {"Mon": "9am-10pm", ...}
-  
-  ownerId         String         @unique
-
-  menuCategories  MenuCategory[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  name           String
+  description    String
+  street         String
+  city           String
+  state          String
+  postalCode     String
+  latitude       Float
+  longitude      Float
+  cuisine        String
+  operatingHours Json
+  ownerId        String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  menuCategories MenuCategory[]
 }
 
 model MenuCategory {
-  id           String      @id @default(cuid())
+  id           String     @id @default(cuid())
   name         String
-  
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
   restaurantId String
-
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
   items        MenuItem[]
 
   @@unique([restaurantId, name])
 }
 
 model MenuItem {
-  id           String        @id @default(cuid())
-  name         String
-  description  String
-  price        Float
-  imageUrl     String?
-  isAvailable  Boolean       @default(true)
-  
-  category     MenuCategory  @relation(fields: [categoryId], references: [id])
-  categoryId   String
+  id          String       @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  imageUrl    String?
+  isAvailable Boolean      @default(true)
+  categoryId  String
+  category    MenuCategory @relation(fields: [categoryId], references: [id])
 }

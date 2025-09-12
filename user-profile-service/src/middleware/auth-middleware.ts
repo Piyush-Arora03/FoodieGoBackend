@@ -24,7 +24,7 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
       return next(new AppError('You are not logged in', STATUS_CODE.UNAUTHORIZED));
     }
     const decoded = verifyToken(token) as JwtPayload;
-    console.log("decoded data is ", decoded);
+    console.log("decoded data is", decoded);
     req.user = { id: decoded.id!!, role: decoded.role };
     console.log(req.user);
     next();
