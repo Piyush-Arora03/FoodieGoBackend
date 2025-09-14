@@ -17,7 +17,6 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     const userPayload = JSON.stringify({ id: decoded.id, role: decoded.role });
     req.headers['x-user-payload'] = userPayload;

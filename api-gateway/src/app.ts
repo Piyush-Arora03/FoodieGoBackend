@@ -12,7 +12,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(apiLimiter);
 
-const protectedRoutes = ['/api/v1/users', '/api/v1/addresses']
+const protectedRoutes = ['/api/v1/users', '/api/v1/addresses', '/api/v1/restaurants']
 
 app.use((req, res, next) => {
     const correlationId = req.headers['x-correlation-id'] || crypto.randomUUID();
