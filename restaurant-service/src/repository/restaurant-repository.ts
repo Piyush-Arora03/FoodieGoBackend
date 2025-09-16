@@ -39,7 +39,6 @@ class RestaurantRepository {
                 ST_MakePoint(${lng}, ${lat})::geography,
                 ${radiusInMeters}
             )`
-
             return restaurants;
         }catch(error){
             throw new AppError("Error while fetching nearby restaurants", STATUS_CODE.INTERNAL_SERVER_ERROR)
@@ -76,6 +75,34 @@ class RestaurantRepository {
         throw new AppError("Error while fetching restaurant", STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async search(query: string,cuisine?:string){
+    try {
+        // const searchTerm=query.split(' ').join(' & ');
+        const restaurant= await prisma.$queryRaw`
+        SELECT *,
+               -- Calculate the similarity of the name and cuisine to the search query
+               SIMILARITY(name, ${query}) AS name_similarity,
+               SIMILARITY(cuisine, ${query}) AS cuisine_similarity
+        FROM "Restaurant"
+        WHERE (
+            -- Check for similarity score above a threshold OR use ILIKE for partial matches
+            SIMILARITY(name, ${query}) > 0.1 OR
+            SIMILARITY(cuisine, ${query}) > 0.1 OR
+            name ILIKE ${'%' + query + '%'}
+        )
+        -- If a cuisine filter is provided, add it to the WHERE clause
+        AND (${cuisine}::text IS NULL OR cuisine ILIKE ${'%' + cuisine + '%'})
+        -- Order the results by the highest similarity score first
+        ORDER BY name_similarity DESC, cuisine_similarity DESC
+        `;
+
+        return restaurant;
+    } catch (error) {
+        throw new AppError("Error while searching restaurants", STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
+
 
 export default RestaurantRepository;

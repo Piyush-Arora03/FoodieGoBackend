@@ -41,7 +41,14 @@ async function createRestaurant(req: Request, res: Response, next: NextFunction)
 
 async function getAllRestaurants(req: Request, res: Response, next: NextFunction) {
     try {
-        const restaurants: Restaurant[] = await restaurantService.findAll();
+        let lat = undefined
+        let lng = undefined
+        if (!req.query.lat && !req.query.lng) {
+            lat = parseFloat(req.query.lat as string) as number;
+            lng = parseFloat(req.query.lng as string) as number;
+        }
+        logger.info('Fetching all restaurants');
+        const restaurants: Restaurant[] = await restaurantService.findAll(lat, lng);
         res.status(STATUS_CODE.OK).json({ status: 'success', results: restaurants.length, data: restaurants });
     } catch (error) {
         logger.error('Error fetching all restaurants', { error }); 4
@@ -85,4 +92,27 @@ async function addMenuItem(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export { createRestaurant, getAllRestaurants, addMenuItem };
+async function search(req: Request, res: Response, next: NextFunction) {
+    try {
+        const query = (req.query.q as string) || '';
+        const cuisine = req.query.cuisine as string | undefined;
+
+        logger.info('Searching for restaurants', { query, cuisine });
+        const restaurants = await restaurantService.search(query, cuisine) as Restaurant[];
+        res.status(STATUS_CODE.OK).json({ status: 'success', results: restaurants.length, data: restaurants });
+    } catch (error) {
+        logger.error('Error searching restaurants', { error });
+        if (error instanceof AppError) {
+            return res.status(error.httpCode).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+        return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+};
+
+export { createRestaurant, getAllRestaurants, addMenuItem, search };

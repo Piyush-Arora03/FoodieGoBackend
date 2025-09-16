@@ -63,6 +63,18 @@ class RestaurantService {
             throw error;
         }   
     }
+
+    async search(query: string, cuisine?: string){
+        try {
+            if(!query && !cuisine){
+                return this.findAll();
+            }
+            const restaurants = await this.restaurantRepository.search(query, cuisine);
+            return restaurants;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default RestaurantService;
