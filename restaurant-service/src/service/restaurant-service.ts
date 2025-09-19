@@ -6,7 +6,7 @@ import { STATUS_CODE } from "../config/status-code.config";
 import uploadService from "./upload-service";
 import logger from "../config/logger.config";
 import redisClient from "../config/redis";
-import { MenuItem} from "../../node_modules/.prisma/restuarant-client";
+import { MenuItem } from "../../node_modules/.prisma/restuarant-client";
 
 
 
@@ -63,6 +63,9 @@ class RestaurantService {
                 imageUrl = await uploadService.uploadImage(file);
             }
             const menuItem = await this.restaurantRepository.addMenuItem(restaurantId, { ...data, imageUrl });
+            const cacheKey = `cache:menu:${restaurantId}`;
+            logger.info(`removing cached key ${cacheKey}`);
+            await redisClient.del(cacheKey);
             return menuItem;
         } catch (error) {
             throw error;
@@ -83,8 +86,8 @@ class RestaurantService {
 
     private async verifyOwner(itemId: string, ownerId: string) {
         try {
-            const item=await this.restaurantRepository.findMenuItem(itemId);
-            if(!item || item.category.restaurant.ownerId!==ownerId){
+            const item = await this.restaurantRepository.findMenuItem(itemId);
+            if (!item || item.category.restaurant.ownerId !== ownerId) {
                 throw new AppError("Item not found or Unauthorized", STATUS_CODE.BAD_REQUEST);
             }
             return item.category.restaurant;
@@ -96,39 +99,72 @@ class RestaurantService {
 
     async setItemAvailability(itemId: string, ownerId: string, isAvailable: boolean) {
         try {
-            const restaurant=await this.verifyOwner(itemId,ownerId);
-            const redisKey=`unavailable_item:${restaurant.id}`;
-            if(isAvailable){
-                await redisClient.srem(redisKey,itemId);
+            const restaurant = await this.verifyOwner(itemId, ownerId);
+            const redisKey = `unavailable_item:${restaurant.id}`;
+            if (isAvailable) {
+                await redisClient.srem(redisKey, itemId);
                 return { status: `${itemId} is now available` };
             } else {
                 await redisClient.sadd(redisKey, itemId);
                 return { status: `${itemId} is now unavailable` };
             }
-        }catch(error){
+        } catch (error) {
             throw error;
-        } 
+        }
     }
 
     async getAllMenu(restaurantId: string): Promise<MenuItem[] | null> {
         try {
-            const items = await this.restaurantRepository.getAllMenu(restaurantId);
-            if(!items){
+            const cacheKey = `cache:menu:${restaurantId}`;
+            const unavailableKey = `unavailable_item:${restaurantId}`;
+            const cachedMenu = await redisClient.get(cacheKey);
+            let items: MenuItem[] | null;
+            if (cachedMenu) {
+                logger.info("Cached Menu Found ", restaurantId);
+                items = JSON.parse(cachedMenu);
+            } else {
+                logger.info("Cached Menu Not Found ", restaurantId);
+                items = await this.restaurantRepository.getAllMenu(restaurantId);
+                await redisClient.setex(cacheKey, 60 * 60, JSON.stringify(items))
+            }
+            if (!items) {
                 throw new AppError("No items found", STATUS_CODE.NOT_FOUND);
             }
+            const unavailableIds = await redisClient.get(unavailableKey);
+            const unavailableSet = new Set(unavailableIds);
+            items.forEach((item) => {
+                item.isAvailable = !(unavailableSet.has(item.id));
+            });
             return items as MenuItem[];
-        }catch(error){
+        } catch (error) {
             throw error;
         }
     }
-    async getMenuByCategory(categoryId: string):Promise<MenuItem[] | null> {
+
+    async getMenuByCategory(categoryId: string): Promise<MenuItem[] | null> {
         try {
-            const items = await this.restaurantRepository.listMenuByCategory(categoryId);
-            if(!items){
+            const cacheKey = `cache:menu:${categoryId}`;
+            const unavailableKey = `unavailable_item:${categoryId}`;
+            const cachedMenu = await redisClient.get(cacheKey);
+            let items: MenuItem[] | null;
+            if (cachedMenu) {
+                logger.info("Cached Menu Found ", categoryId);
+                items = JSON.parse(cachedMenu);
+            } else {
+                logger.info("Cached Menu Not Found ", categoryId);
+                items = await this.restaurantRepository.listMenuByCategory(categoryId);
+                await redisClient.setex(cacheKey, 60 * 60, JSON.stringify(items))
+            }
+            if (!items) {
                 throw new AppError("No items found", STATUS_CODE.NOT_FOUND);
             }
+            const unavailableIds = await redisClient.get(unavailableKey);
+            const unavailableSet = new Set(unavailableIds);
+            items.forEach((item) => {
+                item.isAvailable = !(unavailableSet.has(item.id));
+            });
             return items as MenuItem[];
-        }catch(error){
+        } catch (error) {
             throw error;
         }
     }
