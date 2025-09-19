@@ -31,3 +31,25 @@ export const addMenuItemSchema = z.object({
         restaurantId: z.string().cuid(),
     }),
 });
+
+export const searchSchema = z.object({
+    query: z.object({
+        q: z.string().min(1, { message: 'Search query is required' }),
+        cuisine: z.string().optional(),
+    }),
+    headers: z.object({
+        'x-package-name': z.string().min(1, { message: 'X-Package-Name header is required' }),
+    }),
+});
+
+export const setItemAvailabilitySchema = z.object({
+    body: z.object({
+        isAvailable: z.boolean(),
+    }),
+    param: z.object({
+        itemId: z.string().cuid(),
+    }),
+    headers: z.object({
+        'x-package-name': z.string().min(1, { message: 'X-Package-Name header is required' }),
+    }),
+});

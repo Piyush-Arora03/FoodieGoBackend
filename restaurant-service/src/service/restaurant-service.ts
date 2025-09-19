@@ -4,6 +4,11 @@ import { Restaurant } from "../../node_modules/.prisma/restuarant-client";
 import { AppError } from "../utils/app-error";
 import { STATUS_CODE } from "../config/status-code.config";
 import uploadService from "./upload-service";
+import logger from "../config/logger.config";
+import redisClient from "../config/redis";
+import { MenuItem} from "../../node_modules/.prisma/restuarant-client";
+
+
 
 
 
@@ -16,7 +21,7 @@ class RestaurantService {
 
     async createRestaurant(data: any, ownerId: string) {
         try {
-            console.log("creating restaurant with data service-->",data);
+            console.log("creating restaurant with data service-->", data);
             const fullAddress = `${data.street},${data.city},${data.state},${data.postalCode}`
             const coordinates = await geoService.getCoordinates(fullAddress);
             const completeData = {
@@ -61,12 +66,12 @@ class RestaurantService {
             return menuItem;
         } catch (error) {
             throw error;
-        }   
+        }
     }
 
-    async search(query: string, cuisine?: string){
+    async search(query: string, cuisine?: string) {
         try {
-            if(!query && !cuisine){
+            if (!query && !cuisine) {
                 return this.findAll();
             }
             const restaurants = await this.restaurantRepository.search(query, cuisine);
@@ -75,6 +80,59 @@ class RestaurantService {
             throw error;
         }
     }
+
+    private async verifyOwner(itemId: string, ownerId: string) {
+        try {
+            const item=await this.restaurantRepository.findMenuItem(itemId);
+            if(!item || item.category.restaurant.ownerId!==ownerId){
+                throw new AppError("Item not found or Unauthorized", STATUS_CODE.BAD_REQUEST);
+            }
+            return item.category.restaurant;
+        } catch (error) {
+            logger.info(`Error while verifying owner: ${error}`)
+            throw new AppError("Error while verifying owner", STATUS_CODE.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async setItemAvailability(itemId: string, ownerId: string, isAvailable: boolean) {
+        try {
+            const restaurant=await this.verifyOwner(itemId,ownerId);
+            const redisKey=`unavailable_item:${restaurant.id}`;
+            if(isAvailable){
+                await redisClient.srem(redisKey,itemId);
+                return { status: `${itemId} is now available` };
+            } else {
+                await redisClient.sadd(redisKey, itemId);
+                return { status: `${itemId} is now unavailable` };
+            }
+        }catch(error){
+            throw error;
+        } 
+    }
+
+    async getAllMenu(restaurantId: string): Promise<MenuItem[] | null> {
+        try {
+            const items = await this.restaurantRepository.getAllMenu(restaurantId);
+            if(!items){
+                throw new AppError("No items found", STATUS_CODE.NOT_FOUND);
+            }
+            return items as MenuItem[];
+        }catch(error){
+            throw error;
+        }
+    }
+    async getMenuByCategory(categoryId: string):Promise<MenuItem[] | null> {
+        try {
+            const items = await this.restaurantRepository.listMenuByCategory(categoryId);
+            if(!items){
+                throw new AppError("No items found", STATUS_CODE.NOT_FOUND);
+            }
+            return items as MenuItem[];
+        }catch(error){
+            throw error;
+        }
+    }
+
 }
 
 export default RestaurantService;
