@@ -14,5 +14,9 @@ export const service = [
     {
         route: "/api/v1/restaurants",
         target: "http://localhost:3003"
+    },
+    {
+        route: "/api/v1/orders",
+        target: "http://localhost:3004"
     }
 ]

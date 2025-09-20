@@ -115,16 +115,16 @@ async function search(req: Request, res: Response, next: NextFunction) {
     }
 };
 
-async function setItemAvailability(req:Request,res:Response,next:NextFunction){
+async function setItemAvailability(req: Request, res: Response, next: NextFunction) {
     try {
-        const {itemId}=req.params;
-        const userPayload=req.headers['x-user-payload'] as string;
-        const parsePayload=JSON.parse(userPayload!) as JwtPayload;
-        const ownerId:string=parsePayload.id;
-        const isAvailable:boolean=req.body.isAvailable;
+        const { itemId } = req.params;
+        const userPayload = req.headers['x-user-payload'] as string;
+        const parsePayload = JSON.parse(userPayload!) as JwtPayload;
+        const ownerId: string = parsePayload.id;
+        const isAvailable: boolean = req.body.isAvailable;
         logger.info(`User ${ownerId} setting item ${itemId} availability to ${isAvailable}`);
-        const response=await restaurantService.setItemAvailability(itemId as string,ownerId,isAvailable);
-        res.status(STATUS_CODE.OK).json({status:'success',data:response});
+        const response = await restaurantService.setItemAvailability(itemId as string, ownerId, isAvailable);
+        res.status(STATUS_CODE.OK).json({ status: 'success', data: response });
     } catch (error) {
         logger.error('Error  setting item availability', { error });
         if (error instanceof AppError) {
@@ -140,12 +140,12 @@ async function setItemAvailability(req:Request,res:Response,next:NextFunction){
     }
 }
 
-async function getAllMenu(req:Request,res:Response,next:NextFunction){
+async function getAllMenu(req: Request, res: Response, next: NextFunction) {
     try {
-        const {restaurantId}=req.params as {restaurantId:string};
+        const { restaurantId } = req.params as { restaurantId: string };
         logger.info(`Fetching all menu items for restaurant ${restaurantId}`);
-        const menuItems=await restaurantService.getAllMenu(restaurantId);
-        res.status(STATUS_CODE.OK).json({status:'success',data:menuItems});
+        const menuItems = await restaurantService.getAllMenu(restaurantId);
+        res.status(STATUS_CODE.OK).json({ status: 'success', data: menuItems });
     } catch (error) {
         logger.error('Error fetching all menu items', { error });
         if (error instanceof AppError) {
@@ -161,12 +161,12 @@ async function getAllMenu(req:Request,res:Response,next:NextFunction){
     }
 }
 
-async function getMenuByCategory(req:Request,res:Response,next:NextFunction){
+async function getMenuByCategory(req: Request, res: Response, next: NextFunction) {
     try {
-        const {categoryId}=req.params as {categoryId:string};
+        const { categoryId } = req.params as { categoryId: string };
         logger.info(`Fetching menu items for category ${categoryId}`);
-        const menuItems=await restaurantService.getMenuByCategory(categoryId);
-        res.status(STATUS_CODE.OK).json({status:'success',data:menuItems});
+        const menuItems = await restaurantService.getMenuByCategory(categoryId);
+        res.status(STATUS_CODE.OK).json({ status: 'success', data: menuItems });
     } catch (error) {
         logger.error('Error fetching menu items', { error });
         if (error instanceof AppError) {
@@ -182,4 +182,33 @@ async function getMenuByCategory(req:Request,res:Response,next:NextFunction){
     }
 }
 
-export { createRestaurant, getAllRestaurants, addMenuItem, search , setItemAvailability, getAllMenu, getMenuByCategory };
+async function getMenuItem(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { itemId } = req.params as { itemId: string };
+        logger.info(`Fetching menu item ${itemId}`);
+        const menuItem = await restaurantService.getMenuItem(itemId);
+        res.status(STATUS_CODE.OK).json({ status: 'success', data: menuItem });
+    } catch (error) {
+        logger.error('Error fetching menu items', { error });
+        if (error instanceof AppError) {
+            return res.status(error.httpCode).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+        return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+}
+
+export {
+    createRestaurant,
+    getAllRestaurants,
+    addMenuItem, search,
+    setItemAvailability,
+    getAllMenu,
+    getMenuByCategory,
+    getMenuItem
+};

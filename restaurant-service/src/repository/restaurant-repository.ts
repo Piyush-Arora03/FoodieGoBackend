@@ -2,6 +2,7 @@ import { prisma } from '../db'
 import { Restaurant, MenuItem } from '../../node_modules/.prisma/restuarant-client'
 import { AppError } from '../utils/app-error';
 import { STATUS_CODE } from '../config/status-code.config';
+import logger from '../config/logger.config';
 
 class RestaurantRepository {
 
@@ -122,9 +123,9 @@ class RestaurantRepository {
             const restaurant = await prisma.restaurant.findUnique({
                 where: { id: restaurantId },
                 include: {
-                    menuCategories:{
-                        include:{
-                            items:true
+                    menuCategories: {
+                        include: {
+                            items: true
                         }
                     }
                 }
@@ -135,8 +136,8 @@ class RestaurantRepository {
             }
 
             if (restaurant.menuCategories.length > 0) {
-                let res:MenuItem[]=[];
-                for(const category of restaurant.menuCategories){
+                let res: MenuItem[] = [];
+                for (const category of restaurant.menuCategories) {
                     res.push(...category.items);
                 }
                 return res;
@@ -152,16 +153,29 @@ class RestaurantRepository {
 
     async listMenuByCategory(categoryId: string): Promise<MenuItem[]> {
         try {
-            const category=await prisma.menuCategory.findUnique({
-                where:{id:categoryId},
-                include:{items:true}
+            const category = await prisma.menuCategory.findUnique({
+                where: { id: categoryId },
+                include: { items: true }
             });
-            if(!category){
-                throw new AppError("Category not found",STATUS_CODE.NOT_FOUND);
+            if (!category) {
+                throw new AppError("Category not found", STATUS_CODE.NOT_FOUND);
             }
             return category.items;
         } catch (error) {
             throw new AppError("Error while fetching menu items", STATUS_CODE.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async getItemById(itemId: string): Promise<MenuItem | null> {
+        try {
+            logger.info(`Fetching menu item in repo with id ${itemId}`);
+            const item: MenuItem | null = await prisma.menuItem.findUnique({
+                where: { id: itemId }
+            });
+            logger.info(`Fetched menu item in repo: ${item?.id}`);
+            return item;
+        } catch (error) {
+            throw new AppError("Error while fetching menu item", STATUS_CODE.INTERNAL_SERVER_ERROR);
         }
     }
 

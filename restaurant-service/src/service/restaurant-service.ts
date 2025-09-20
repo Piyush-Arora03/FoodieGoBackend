@@ -169,6 +169,19 @@ class RestaurantService {
         }
     }
 
+    async getMenuItem(itemId: string): Promise<MenuItem | null> {
+        try {
+            logger.info(`Fetching menu item with id ${itemId}`);
+            const item: MenuItem | null = await this.restaurantRepository.getItemById(itemId);
+            if (!item) {
+                throw new AppError("Item not found", STATUS_CODE.NOT_FOUND);
+            }
+            logger.info(`Fetched menu item: ${item.id}`);
+            return item;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default RestaurantService;
