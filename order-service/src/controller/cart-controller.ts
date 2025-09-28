@@ -64,8 +64,9 @@ async function getCart(req: Request, res: Response, next: NextFunction) {
         const userPlayload = req.headers['x-user-payload'] as string;
         const parsePayload = JSON.parse(userPlayload!) as JwtPayload;
         const userId: string = parsePayload.id;
+        const token = req.headers.authorization?.split(' ')[1];
         logger.info(`Fetching cart for user ${userId}`);
-        const cart = await cartService.getCart(userId);
+        const cart = await cartService.getCart(userId, token!);
         res.status(STATUS_CODE.OK).json({ status: 'success', data: cart });
     } catch (error) {
         logger.error('Error fetching cart', { error });

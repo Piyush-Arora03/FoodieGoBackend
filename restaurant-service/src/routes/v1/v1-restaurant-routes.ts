@@ -1,16 +1,18 @@
 import { Router } from "express";
 import uploadSingleImage from "../../middleware/upload-middleware";
-import { addRestaurantSchema, addMenuItemSchema } from "../../schema/restaurnat.schema";
+import { addRestaurantSchema, addMenuItemSchema ,itemIdsSchema } from "../../schema/restaurnat.schema";
 import { validate } from "../../middleware/validator";
-import { createRestaurant, 
-    addMenuItem, 
-    search, 
-    getAllRestaurants, 
-    setItemAvailability, 
-    getAllMenu, 
+import {
+    createRestaurant,
+    addMenuItem,
+    search,
+    getAllRestaurants,
+    setItemAvailability,
+    getAllMenu,
     getMenuByCategory,
-    getMenuItem 
- } from "../../controller/restaurant-controller";
+    getMenuItem,
+    getMultipleItems
+} from "../../controller/restaurant-controller";
 
 const route: Router = Router();
 
@@ -22,6 +24,7 @@ route.patch('/menu-items/:itemId/availability', validate(addMenuItemSchema), set
 route.get('/:restaurantId/menu-items', getAllMenu);
 route.get('/:restaurantId/:categoryId/menu-items', getMenuByCategory);
 route.get('/menu-items/:itemId', getMenuItem);
+route.post('/menu-items/batch', validate(itemIdsSchema), getMultipleItems);
 
 export default route;
 

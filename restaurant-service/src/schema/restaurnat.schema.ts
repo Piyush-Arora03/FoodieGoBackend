@@ -53,3 +53,12 @@ export const setItemAvailabilitySchema = z.object({
         'x-package-name': z.string().min(1, { message: 'X-Package-Name header is required' }),
     }),
 });
+
+export const itemIdsSchema = z.object({
+    body: z.object({
+        itemIds: z.array(z.string().cuid()).min(1, { message: 'Atleast one itemId is required' }),
+    }),
+    headers: z.object({
+        'x-package-name': z.string().min(1, { message: 'X-Package-Name header is required' }),
+    }),
+});

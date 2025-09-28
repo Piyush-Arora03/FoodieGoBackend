@@ -23,15 +23,11 @@ class CartRepository{
         }
     }
 
-    async getCart(userId:string){
+    async getCart(userId:string):Promise<Record<string,string>>{
         try {
             const cartKey=`cart:${userId}`;
             const cartItems=await redisClient.hgetall(cartKey);
-            const formattedItems=Object.entries(cartItems).map(([itemId,quantity])=>({
-                itemId,
-                quantity:parseInt(quantity)
-            }));
-            return formattedItems;
+            return cartItems;
         } catch (error) {
             throw new AppError('Error fetching cart',STATUS_CODE.INTERNAL_SERVER_ERROR);
         }

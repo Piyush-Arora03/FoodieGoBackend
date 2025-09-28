@@ -179,6 +179,20 @@ class RestaurantRepository {
         }
     }
 
+    async getItemsByIds(itemIds: string[]): Promise<MenuItem[]> {
+        try {
+            logger.info(`Fetching menu items in repo with ids ${itemIds}`);
+            const items: MenuItem[] = await prisma.menuItem.findMany({
+                where: { id: { in: itemIds } }
+            });
+            logger.info(`Fetched ${items.length} menu items in repo`);
+            return items;
+        } catch (error) {
+            logger.error("Error while fetching menu items by ids", error);
+            throw new AppError("Error while fetching menu items", STATUS_CODE.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
 
 

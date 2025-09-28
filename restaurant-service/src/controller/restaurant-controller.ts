@@ -203,7 +203,29 @@ async function getMenuItem(req: Request, res: Response, next: NextFunction) {
     }
 }
 
+async function getMultipleItems(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { itemIds } = req.body as { itemIds: string[] };
+        logger.info(`Fetching multiple menu items ${itemIds}`);
+        const menuItems = await restaurantService.getMultipleItems(itemIds);
+        return res.status(STATUS_CODE.OK).json({ status: 'success', data: menuItems });
+    } catch (error) {
+        logger.error('Error fetching menu items', { error });
+        if (error instanceof AppError) {
+            return res.status(error.httpCode).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+        return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+}
+
 export {
+    getMultipleItems,
     createRestaurant,
     getAllRestaurants,
     addMenuItem, search,

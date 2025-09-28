@@ -182,6 +182,15 @@ class RestaurantService {
             throw error;
         }
     }
+
+    async getMultipleItems(itemIds: string[]): Promise<MenuItem[]> {
+        try {
+            const items: MenuItem[] = await this.restaurantRepository.getItemsByIds(itemIds);
+            return items;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default RestaurantService;

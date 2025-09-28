@@ -9,3 +9,11 @@ export interface JwtPayload {
   id: string;
   role: Role;
 }
+
+export interface MenuItem {
+  itemId: string;
+  quantity: string;
+  name: string;
+  price: number;
+  subtotal: number;
+}

@@ -15,6 +15,7 @@ app.use(apiLimiter);
 const protectedRoutes = ['/api/v1/users', '/api/v1/addresses', '/api/v1/restaurants', '/api/v1/orders'];
 
 app.use((req, res, next) => {
+    console.log("req body->",req.body);
     const correlationId = req.headers['x-correlation-id'] || crypto.randomUUID();
     req.headers['x-correlation-id'] = correlationId;
     res.setHeader('x-correlation-id', correlationId);

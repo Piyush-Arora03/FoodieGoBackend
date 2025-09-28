@@ -8,11 +8,11 @@ export interface JwtPayload {
     id: string;
     role: Role;
 }
-export interface User {
-    id: string;
+export interface MenuItem {
+    itemId: string;
+    quantity: string;
     name: string;
-    email: string;
-    password: string;
-    role: Role[];
+    price: number;
+    subtotal: number;
 }
 //# sourceMappingURL=index.d.ts.map
